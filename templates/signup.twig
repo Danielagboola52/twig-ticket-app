@@ -1,0 +1,132 @@
+{% extends "layout.twig" %}
+
+{% block title %}Sign Up - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="container">
+        <div class="auth-box">
+            <h1 class="auth-title">Create Account</h1>
+            <p class="auth-subtitle">Sign up to get started</p>
+
+            <div id="error-message" class="error-message" style="display: none;"></div>
+
+            <form id="signup-form" class="auth-form">
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        placeholder="Enter your full name"
+                        required
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        placeholder="Enter your email"
+                        required
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Enter your password (min 6 characters)"
+                        required
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm-password">Confirm Password</label>
+                    <input
+                        type="password"
+                        id="confirm-password"
+                        name="confirm-password"
+                        placeholder="Confirm your password"
+                        required
+                    />
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-full">
+                    Create Account
+                </button>
+            </form>
+
+            <p class="auth-footer">
+                Already have an account?
+                <a href="/?page=login" class="link">Sign in</a>
+            </p>
+
+            <a href="/" class="back-link">← Back to Home</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('signup-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const name = document.getElementById('name').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+        const errorDiv = document.getElementById('error-message');
+        
+        // Clear previous errors
+        errorDiv.style.display = 'none';
+        errorDiv.textContent = '';
+        
+        // Validation
+        if (!name || !email || !password || !confirmPassword) {
+            errorDiv.textContent = 'Please fill in all fields';
+            errorDiv.style.display = 'block';
+            return;
+        }
+        
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            errorDiv.textContent = 'Please enter a valid email address';
+            errorDiv.style.display = 'block';
+            return;
+        }
+        
+        // Password length validation
+        if (password.length < 6) {
+            errorDiv.textContent = 'Password must be at least 6 characters long';
+            errorDiv.style.display = 'block';
+            return;
+        }
+        
+        // Password match validation
+        if (password !== confirmPassword) {
+            errorDiv.textContent = 'Passwords do not match';
+            errorDiv.style.display = 'block';
+            return;
+        }
+        
+        // Create account (simulate)
+        const token = 'demo_token_' + Date.now();
+        localStorage.setItem('ticketapp_session', token);
+        localStorage.setItem('user_email', email);
+        localStorage.setItem('user_name', name);
+        
+        // Show success toast
+        showToast('Account created successfully! Redirecting...', 'success');
+        
+        // Redirect to dashboard
+        setTimeout(() => {
+            window.location.href = '/?page=dashboard';
+        }, 1000);
+    });
+</script>
+{% endblock %}

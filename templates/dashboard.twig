@@ -1,0 +1,65 @@
+{% extends "layout.twig" %}
+
+{% block title %}Dashboard - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">{{ app_name }}</div>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <span id="menu-icon">☰</span>
+            </button>
+            <div class="nav-links" id="nav-links">
+                <a href="/?page=dashboard" class="nav-link" onclick="closeMenu()">Dashboard</a>
+                <a href="/?page=tickets" class="nav-link" onclick="closeMenu()">Tickets</a>
+                <button onclick="handleLogout()" class="btn-logout">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-content">
+        <div class="container">
+            <h1 class="page-title">Dashboard</h1>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-number" id="total-tickets">0</div>
+                    <div class="stat-label">Total Tickets</div>
+                </div>
+
+                <div class="stat-box stat-open">
+                    <div class="stat-icon">🟢</div>
+                    <div class="stat-number" id="open-tickets">0</div>
+                    <div class="stat-label">Open Tickets</div>
+                </div>
+
+                <div class="stat-box stat-resolved">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-number" id="resolved-tickets">0</div>
+                    <div class="stat-label">Resolved Tickets</div>
+                </div>
+            </div>
+
+            <div class="action-section">
+                <h2>Quick Actions</h2>
+                <a href="/?page=tickets" class="btn btn-primary">
+                    Manage Tickets
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; {{ current_year }} {{ app_name }}. All rights reserved.</p>
+        </div>
+    </footer>
+</div>
+
+<!-- Load scripts in correct order -->
+<script src="/public/js/toast.js"></script>
+<script src="/public/js/auth.js"></script>
+<script src="/public/js/dashboard.js"></script>
+{% endblock %}

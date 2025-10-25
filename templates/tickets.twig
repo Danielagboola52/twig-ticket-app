@@ -1,0 +1,149 @@
+{% extends "layout.twig" %}
+
+{% block title %}Tickets - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="tickets-page">
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">{{ app_name }}</div>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <span id="menu-icon">☰</span>
+            </button>
+            <div class="nav-links" id="nav-links">
+                <a href="/?page=dashboard" class="nav-link" onclick="closeMenu()">Dashboard</a>
+                <a href="/?page=tickets" class="nav-link" onclick="closeMenu()">Tickets</a>
+                <button onclick="handleLogout()" class="btn-logout">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <div class="tickets-content">
+        <div class="container">
+            <div class="header-section">
+                <div>
+                    <h1 class="page-title">Ticket Management</h1>
+                    <p class="page-subtitle">Create and manage your support tickets</p>
+                </div>
+                <button onclick="openCreateModal()" class="btn btn-primary">
+                    + New Ticket
+                </button>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="empty-state" style="display: none;">
+                <div class="empty-icon">📋</div>
+                <h3>No tickets yet</h3>
+                <p>Create your first ticket to get started</p>
+                <button onclick="openCreateModal()" class="btn btn-primary">Create Ticket</button>
+            </div>
+
+            <!-- Tickets Grid -->
+            <div id="tickets-grid" class="tickets-grid"></div>
+        </div>
+    </div>
+
+    <!-- Create/Edit Modal -->
+    <div id="modal-overlay" class="modal-overlay" style="display: none;" onclick="closeModalOnOverlay(event)">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modal-title">Create New Ticket</h2>
+                <button onclick="closeModal()" class="modal-close">✕</button>
+            </div>
+
+            <form id="ticket-form" class="modal-form">
+                <div class="form-group">
+                    <label for="title">Title <span class="required">*</span></label>
+                    <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        placeholder="Enter ticket title"
+                    />
+                    <span id="title-error" class="error-message" style="display: none;"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea
+                        id="description"
+                        name="description"
+                        placeholder="Enter ticket description (optional)"
+                        rows="4"
+                    ></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="status">Status <span class="required">*</span></label>
+                        <select id="status" name="status">
+                            <option value="">Select status</option>
+                            <option value="open">Open</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="closed">Closed</option>
+                        </select>
+                        <span id="status-error" class="error-message" style="display: none;"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="priority">Priority</label>
+                        <select id="priority" name="priority">
+                            <option value="">Select priority</option>
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" onclick="closeModal()" class="btn btn-secondary">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="submit-btn">
+                        Create Ticket
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="modal-overlay" style="display: none;" onclick="closeDeleteModalOnOverlay(event)">
+        <div class="modal modal-small">
+            <div class="modal-header">
+                <h2>Delete Ticket?</h2>
+                <button onclick="closeDeleteModal()" class="modal-close">✕</button>
+            </div>
+
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong id="delete-ticket-title"></strong>?</p>
+                <p class="warning-text">This action cannot be undone.</p>
+            </div>
+
+            <div class="modal-actions">
+                <button onclick="closeDeleteModal()" class="btn btn-secondary">
+                    Cancel
+                </button>
+                <button onclick="confirmDeleteTicket()" class="btn btn-danger">
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; {{ current_year }} {{ app_name }}. All rights reserved.</p>
+        </div>
+    </footer>
+</div>
+
+<!-- Load scripts in correct order -->
+<script src="/public/js/toast.js"></script>
+<script src="/public/js/auth.js"></script>
+<script src="/public/js/tickets.js"></script>
+{% endblock %}

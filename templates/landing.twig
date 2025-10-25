@@ -1,0 +1,147 @@
+{% extends "layout.twig" %}
+
+{% block title %}{{ app_name }} - Manage Your Tickets Effortlessly{% endblock %}
+
+{% block content %}
+<div class="landing-page">
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">{{ app_name }}</div>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <span id="menu-icon">☰</span>
+            </button>
+            <div class="nav-links" id="nav-links">
+                <a href="/?page=login" class="nav-link" onclick="closeMenu()">Login</a>
+                <a href="/?page=signup" class="nav-button" onclick="closeMenu()">Get Started</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <!-- Decorative Circles -->
+                <div class="decorative-circle circle-1"></div>
+                <div class="decorative-circle circle-2"></div>
+                <div class="decorative-circle circle-3"></div>
+                
+                <h1 class="hero-title">Manage Your Tickets Effortlessly</h1>
+                <p class="hero-description">
+                    Streamline your support workflow with our powerful ticket management system. 
+                    Track, organize, and resolve tickets faster than ever before.
+                </p>
+                
+                <div class="hero-buttons">
+                    <a href="/?page=signup" class="btn btn-primary">Get Started Free</a>
+                    <a href="/?page=login" class="btn btn-secondary">Sign In</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Wave SVG -->
+        <div class="wave-container">
+            <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+                <path d="M0,64 C240,20 480,20 720,64 C960,108 1200,108 1440,64 L1440,120 L0,120 Z" fill="#ffffff"/>
+            </svg>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title">Why Choose {{ app_name }}?</h2>
+            
+            <div class="features-grid">
+                <div class="feature-box">
+                    <div class="feature-icon">📊</div>
+                    <h3>Real-Time Dashboard</h3>
+                    <p>Monitor all your tickets at a glance with live statistics and insights.</p>
+                </div>
+                
+                <div class="feature-box">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Lightning Fast</h3>
+                    <p>Create, update, and resolve tickets in seconds with our intuitive interface.</p>
+                </div>
+                
+                <div class="feature-box">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Secure & Private</h3>
+                    <p>Your data is protected with enterprise-grade security measures.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-box">
+                <div class="decorative-circle circle-4"></div>
+                <h2>Ready to Get Started?</h2>
+                <p>Join thousands of teams already using {{ app_name }} to manage their support tickets.</p>
+                <a href="/?page=signup" class="btn btn-primary btn-large">
+                    Create Free Account
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <h3>{{ app_name }}</h3>
+                    <p>Efficient ticket management made simple.</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Product</h4>
+                        <a href="#">Features</a>
+                        <a href="#">Pricing</a>
+                        <a href="#">Security</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Company</h4>
+                        <a href="#">About</a>
+                        <a href="#">Contact</a>
+                        <a href="#">Support</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; {{ current_year }} {{ app_name }}. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</div>
+
+<script>
+    let menuOpen = false;
+
+    function toggleMobileMenu() {
+        menuOpen = !menuOpen;
+        const navLinks = document.getElementById('nav-links');
+        const menuIcon = document.getElementById('menu-icon');
+        
+        if (menuOpen) {
+            navLinks.classList.add('mobile-open');
+            menuIcon.textContent = '✕';
+        } else {
+            navLinks.classList.remove('mobile-open');
+            menuIcon.textContent = '☰';
+        }
+    }
+
+    function closeMenu() {
+        menuOpen = false;
+        const navLinks = document.getElementById('nav-links');
+        const menuIcon = document.getElementById('menu-icon');
+        navLinks.classList.remove('mobile-open');
+        menuIcon.textContent = '☰';
+    }
+</script>
+{% endblock %}
