@@ -10,6 +10,7 @@
             <p class="auth-subtitle">Sign in to your account</p>
 
             <div id="error-message" class="error-message" style="display: none;"></div>
+            <div id="success-message" class="success-message" style="display: none;"></div>
 
             <form id="login-form" class="auth-form">
                 <div class="form-group">
@@ -34,7 +35,7 @@
                     />
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-full">
+                <button type="submit" class="btn btn-primary btn-full" id="login-btn">
                     Sign In
                 </button>
             </form>
@@ -50,44 +51,83 @@
 </div>
 
 <script>
-    document.getElementById('login-form').addEventListener('submit', function(e) {
+    document.getElementById('login-form').addEventListener('submit', async function(e) {
         e.preventDefault();
         
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value.trim();
         const errorDiv = document.getElementById('error-message');
+        const successDiv = document.getElementById('success-message');
+        const submitBtn = document.getElementById('login-btn');
         
-        // Clear previous errors
+        // Clear previous messages
         errorDiv.style.display = 'none';
         errorDiv.textContent = '';
+        successDiv.style.display = 'none';
+        successDiv.textContent = '';
         
-        // Simple validation
+        // Disable submit button
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Signing In...';
+        
+        // Client-side validation
         if (!email || !password) {
             errorDiv.textContent = 'Please fill in all fields';
             errorDiv.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Sign In';
             return;
         }
         
-        // Email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             errorDiv.textContent = 'Please enter a valid email address';
             errorDiv.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Sign In';
             return;
         }
         
-        // Simulate authentication (accept any email/password for demo)
-        const token = 'demo_token_' + Date.now();
-        localStorage.setItem('ticketapp_session', token);
-        localStorage.setItem('user_email', email);
-        
-        // Show success toast
-        showToast('Login successful! Redirecting...', 'success');
-        
-        // Redirect to dashboard after a short delay
-        setTimeout(() => {
-            window.location.href = '/?page=dashboard';
-        }, 1000);
+        // Send to backend
+        try {
+            const formData = new FormData();
+            formData.append('action', 'login');
+            formData.append('email', email);
+            formData.append('password', password);
+            
+            const response = await fetch('/auth.php', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                successDiv.textContent = result.message;
+                successDiv.style.display = 'block';
+                
+                // Show toast if available
+                if (typeof showToast === 'function') {
+                    showToast(result.message, 'success');
+                }
+                
+                // Redirect to dashboard
+                setTimeout(() => {
+                    window.location.href = '/?page=dashboard';
+                }, 1000);
+            } else {
+                errorDiv.textContent = result.message;
+                errorDiv.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Sign In';
+            }
+        } catch (error) {
+            errorDiv.textContent = 'An error occurred. Please try again.';
+            errorDiv.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Sign In';
+            console.error('Login error:', error);
+        }
     });
 </script>
 {% endblock %}

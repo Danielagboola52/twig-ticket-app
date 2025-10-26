@@ -1,21 +1,37 @@
 <?php
-// Enable error reporting for development
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-require_once __DIR__ . '/vendor/autoload.php';
+session_start();
 
-// Set up Twig
+require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/database.php';
+
+Database::getInstance();
+
 $loader = new \Twig\Loader\FilesystemLoader(__DIR__ . '/templates');
 $twig = new \Twig\Environment($loader, [
-    'cache' => false, // Disable cache for development
+    'cache' => false, 
     'debug' => true,
 ]);
 
-// Get the requested page from URL (default to 'landing')
 $page = $_GET['page'] ?? 'landing';
 
-// Map pages to templates
+$protectedPages = ['dashboard', 'tickets'];
+
+$isLoggedIn = isset($_SESSION['user_id']);
+
+if (in_array($page, $protectedPages) && !$isLoggedIn) {
+    header('Location: /?page=login');
+    exit;
+}
+
+if (in_array($page, ['login', 'signup']) && $isLoggedIn) {
+    header('Location: /?page=dashboard');
+    exit;
+}
+
+
 $templates = [
     'landing' => 'landing.twig',
     'login' => 'login.twig',
@@ -24,18 +40,30 @@ $templates = [
     'tickets' => 'tickets.twig',
 ];
 
-// Get the template to render (fallback to landing if invalid)
+
 $template = $templates[$page] ?? 'landing.twig';
 
-// Render the template with common variables
+
+$templateVars = [
+    'page' => $page,
+    'app_name' => 'TicketFlow',
+    'current_year' => date('Y'),
+    'is_logged_in' => $isLoggedIn,
+];
+
+
+if ($isLoggedIn) {
+    $templateVars['user'] = [
+        'id' => $_SESSION['user_id'],
+        'name' => $_SESSION['user_name'],
+        'email' => $_SESSION['user_email'],
+    ];
+}
+
+
 try {
-    echo $twig->render($template, [
-        'page' => $page,
-        'app_name' => 'TicketFlow',
-        'current_year' => date('Y'),
-    ]);
+    echo $twig->render($template, $templateVars);
 } catch (Exception $e) {
-    // Error handling
+    
     echo "Error rendering template: " . $e->getMessage();
 }
-?>

@@ -10,6 +10,7 @@
             <p class="auth-subtitle">Sign up to get started</p>
 
             <div id="error-message" class="error-message" style="display: none;"></div>
+            <div id="success-message" class="success-message" style="display: none;"></div>
 
             <form id="signup-form" class="auth-form">
                 <div class="form-group">
@@ -56,7 +57,7 @@
                     />
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-full">
+                <button type="submit" class="btn btn-primary btn-full" id="signup-btn">
                     Create Account
                 </button>
             </form>
@@ -72,7 +73,7 @@
 </div>
 
 <script>
-    document.getElementById('signup-form').addEventListener('submit', function(e) {
+    document.getElementById('signup-form').addEventListener('submit', async function(e) {
         e.preventDefault();
         
         const name = document.getElementById('name').value.trim();
@@ -80,53 +81,95 @@
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirm-password').value;
         const errorDiv = document.getElementById('error-message');
+        const successDiv = document.getElementById('success-message');
+        const submitBtn = document.getElementById('signup-btn');
         
-        // Clear previous errors
+        // Clear previous messages
         errorDiv.style.display = 'none';
         errorDiv.textContent = '';
+        successDiv.style.display = 'none';
+        successDiv.textContent = '';
         
-        // Validation
+        // Disable submit button
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Creating Account...';
+        
+        // Client-side validation
         if (!name || !email || !password || !confirmPassword) {
             errorDiv.textContent = 'Please fill in all fields';
             errorDiv.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Create Account';
             return;
         }
         
-        // Email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             errorDiv.textContent = 'Please enter a valid email address';
             errorDiv.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Create Account';
             return;
         }
         
-        // Password length validation
         if (password.length < 6) {
             errorDiv.textContent = 'Password must be at least 6 characters long';
             errorDiv.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Create Account';
             return;
         }
         
-        // Password match validation
         if (password !== confirmPassword) {
             errorDiv.textContent = 'Passwords do not match';
             errorDiv.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Create Account';
             return;
         }
         
-        // Create account (simulate)
-        const token = 'demo_token_' + Date.now();
-        localStorage.setItem('ticketapp_session', token);
-        localStorage.setItem('user_email', email);
-        localStorage.setItem('user_name', name);
-        
-        // Show success toast
-        showToast('Account created successfully! Redirecting...', 'success');
-        
-        // Redirect to dashboard
-        setTimeout(() => {
-            window.location.href = '/?page=dashboard';
-        }, 1000);
+        // Send to backend
+        try {
+            const formData = new FormData();
+            formData.append('action', 'signup');
+            formData.append('name', name);
+            formData.append('email', email);
+            formData.append('password', password);
+            formData.append('confirm_password', confirmPassword);
+            
+            const response = await fetch('/auth.php', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                successDiv.textContent = result.message;
+                successDiv.style.display = 'block';
+                
+                // Show toast if available
+                if (typeof showToast === 'function') {
+                    showToast(result.message, 'success');
+                }
+                
+                // Redirect to dashboard
+                setTimeout(() => {
+                    window.location.href = '/?page=dashboard';
+                }, 1000);
+            } else {
+                errorDiv.textContent = result.message;
+                errorDiv.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Account';
+            }
+        } catch (error) {
+            errorDiv.textContent = 'An error occurred. Please try again.';
+            errorDiv.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Create Account';
+            console.error('Signup error:', error);
+        }
     });
 </script>
 {% endblock %}

@@ -12,19 +12,29 @@ let isEditMode = false;
 loadTickets();
 
 /**
- * Load tickets from localStorage
+ * Load tickets from backend API (CHANGED FROM localStorage)
  */
-function loadTickets() {
-    const stored = localStorage.getItem('tickets');
-    tickets = stored ? JSON.parse(stored) : [];
-    renderTickets();
-}
-
-/**
- * Save tickets to localStorage
- */
-function saveTickets() {
-    localStorage.setItem('tickets', JSON.stringify(tickets));
+async function loadTickets() {
+    try {
+        const response = await fetch('/tickets_api.php?action=get_all');
+        const result = await response.json();
+        
+        if (result.success) {
+            tickets = result.data.tickets;
+            renderTickets();
+        } else {
+            console.error('Failed to load tickets:', result.message);
+            tickets = [];
+            renderTickets();
+        }
+    } catch (error) {
+        console.error('Error loading tickets:', error);
+        if (typeof showToast === 'function') {
+            showToast('Error loading tickets', 'error');
+        }
+        tickets = [];
+        renderTickets();
+    }
 }
 
 /**
@@ -50,7 +60,7 @@ function renderTickets() {
 function createTicketCard(ticket) {
     const statusClass = ticket.status;
     const statusLabel = getStatusLabel(ticket.status);
-    const date = formatDate(ticket.createdAt);
+    const date = formatDate(ticket.created_at); // CHANGED: from createdAt to created_at
     const priorityHTML = ticket.priority ? `
         <span class="ticket-priority">
             Priority: <strong>${ticket.priority}</strong>
@@ -98,23 +108,39 @@ function openCreateModal() {
 }
 
 /**
- * Open edit modal
+ * Open edit modal (CHANGED TO USE API)
  */
-function openEditModal(ticketId) {
-    isEditMode = true;
-    currentTicket = tickets.find(t => t.id === ticketId);
-    
-    if (currentTicket) {
-        document.getElementById('modal-title').textContent = 'Edit Ticket';
-        document.getElementById('submit-btn').textContent = 'Update Ticket';
+async function openEditModal(ticketId) {
+    try {
+        // Fetch ticket from backend API
+        const response = await fetch(`/tickets_api.php?action=get&id=${ticketId}`);
+        const result = await response.json();
         
-        // Fill form with current ticket data
-        document.getElementById('title').value = currentTicket.title;
-        document.getElementById('description').value = currentTicket.description || '';
-        document.getElementById('status').value = currentTicket.status;
-        document.getElementById('priority').value = currentTicket.priority || '';
-        
-        document.getElementById('modal-overlay').style.display = 'flex';
+        if (result.success) {
+            const ticket = result.data.ticket;
+            isEditMode = true;
+            currentTicket = ticket;
+            
+            document.getElementById('modal-title').textContent = 'Edit Ticket';
+            document.getElementById('submit-btn').textContent = 'Update Ticket';
+            
+            // Fill form with current ticket data
+            document.getElementById('title').value = ticket.title;
+            document.getElementById('description').value = ticket.description || '';
+            document.getElementById('status').value = ticket.status;
+            document.getElementById('priority').value = ticket.priority || '';
+            
+            document.getElementById('modal-overlay').style.display = 'flex';
+        } else {
+            if (typeof showToast === 'function') {
+                showToast('Error loading ticket', 'error');
+            }
+        }
+    } catch (error) {
+        console.error('Error loading ticket:', error);
+        if (typeof showToast === 'function') {
+            showToast('Error loading ticket', 'error');
+        }
     }
 }
 
@@ -185,9 +211,9 @@ function validateForm() {
 }
 
 /**
- * Handle form submission
+ * Handle form submission (CHANGED TO USE API)
  */
-document.getElementById('ticket-form').addEventListener('submit', function(e) {
+document.getElementById('ticket-form').addEventListener('submit', async function(e) {
     e.preventDefault();
 
     if (!validateForm()) {
@@ -195,37 +221,41 @@ document.getElementById('ticket-form').addEventListener('submit', function(e) {
         return;
     }
 
-    const formData = {
-        title: document.getElementById('title').value.trim(),
-        description: document.getElementById('description').value.trim(),
-        status: document.getElementById('status').value,
-        priority: document.getElementById('priority').value
-    };
+    // Prepare form data for API
+    const formData = new FormData();
+    formData.append('action', isEditMode ? 'update' : 'create');
+    formData.append('title', document.getElementById('title').value.trim());
+    formData.append('description', document.getElementById('description').value.trim());
+    formData.append('status', document.getElementById('status').value);
+    formData.append('priority', document.getElementById('priority').value);
 
     if (isEditMode && currentTicket) {
-        // Update existing ticket
-        const index = tickets.findIndex(t => t.id === currentTicket.id);
-        if (index !== -1) {
-            tickets[index] = {
-                ...currentTicket,
-                ...formData
-            };
-            showToast('Ticket updated successfully!', 'success');
-        }
-    } else {
-        // Create new ticket
-        const newTicket = {
-            id: Date.now(),
-            ...formData,
-            createdAt: new Date().toISOString()
-        };
-        tickets.unshift(newTicket);
-        showToast('Ticket created successfully!', 'success');
+        formData.append('id', currentTicket.id);
     }
 
-    saveTickets();
-    renderTickets();
-    closeModal();
+    try {
+        // Send to backend API
+        const response = await fetch('/tickets_api.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast(
+                isEditMode ? 'Ticket updated successfully!' : 'Ticket created successfully!', 
+                'success'
+            );
+            closeModal();
+            loadTickets(); // Reload tickets from backend
+        } else {
+            showToast(result.message || 'Error saving ticket', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving ticket:', error);
+        showToast('Error saving ticket', 'error');
+    }
 });
 
 /**
@@ -257,15 +287,33 @@ function closeDeleteModalOnOverlay(event) {
 }
 
 /**
- * Confirm and delete ticket
+ * Confirm and delete ticket (CHANGED TO USE API)
  */
-function confirmDeleteTicket() {
-    if (currentTicket) {
-        tickets = tickets.filter(t => t.id !== currentTicket.id);
-        saveTickets();
-        renderTickets();
-        closeDeleteModal();
-        showToast('Ticket deleted successfully', 'success');
+async function confirmDeleteTicket() {
+    if (!currentTicket) return;
+    
+    try {
+        const formData = new FormData();
+        formData.append('action', 'delete');
+        formData.append('id', currentTicket.id);
+        
+        const response = await fetch('/tickets_api.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('Ticket deleted successfully', 'success');
+            closeDeleteModal();
+            loadTickets(); // Reload tickets from backend
+        } else {
+            showToast(result.message || 'Error deleting ticket', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting ticket:', error);
+        showToast('Error deleting ticket', 'error');
     }
 }
 

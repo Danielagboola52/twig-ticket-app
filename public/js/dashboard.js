@@ -19,19 +19,63 @@ window.addEventListener('focus', function() {
 });
 
 /**
- * Load and display dashboard statistics
+ * Load and display dashboard statistics from backend
  */
-function loadStats() {
-    const tickets = JSON.parse(localStorage.getItem('tickets') || '[]');
-    const totalTickets = tickets.length;
-    const openTickets = tickets.filter(t => t.status === 'open').length;
-    const inProgressTickets = tickets.filter(t => t.status === 'in_progress').length;
-    const resolvedTickets = tickets.filter(t => t.status === 'closed').length;
+async function loadStats() {
+    try {
+        const response = await fetch('/tickets_api.php?action=get_stats');
+        const result = await response.json();
+        
+        if (result.success) {
+            const stats = result.data.stats;
+            
+            // Update the display with animation
+            animateValue('total-tickets', 0, parseInt(stats.total) || 0, 500);
+            animateValue('open-tickets', 0, parseInt(stats.open) || 0, 500);
+            animateValue('resolved-tickets', 0, parseInt(stats.closed) || 0, 500);
+        } else {
+            console.error('Failed to load stats:', result.message);
+            
+            // Set default values
+            document.getElementById('total-tickets').textContent = '0';
+            document.getElementById('open-tickets').textContent = '0';
+            document.getElementById('resolved-tickets').textContent = '0';
+        }
+    } catch (error) {
+        console.error('Error loading dashboard stats:', error);
+        
+        // Set default values on error
+        document.getElementById('total-tickets').textContent = '0';
+        document.getElementById('open-tickets').textContent = '0';
+        document.getElementById('resolved-tickets').textContent = '0';
+        
+        if (typeof showToast === 'function') {
+            showToast('Error loading dashboard data', 'error');
+        }
+    }
+}
 
-    // Update the display
-    document.getElementById('total-tickets').textContent = totalTickets;
-    document.getElementById('open-tickets').textContent = openTickets + inProgressTickets;
-    document.getElementById('resolved-tickets').textContent = resolvedTickets;
+/**
+ * Animate number counting up
+ */
+function animateValue(elementId, start, end, duration) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    
+    const range = end - start;
+    const increment = range / (duration / 16); // 60fps
+    let current = start;
+    
+    const timer = setInterval(() => {
+        current += increment;
+        
+        if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+            current = end;
+            clearInterval(timer);
+        }
+        
+        element.textContent = Math.floor(current);
+    }, 16);
 }
 
 // Mobile menu variables
